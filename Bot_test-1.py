@@ -82,9 +82,7 @@ if submit_button and user_message:
     else:
         st.session_state["messages"].append({"sender": "bot", "message": "Pas de réponse du serveur Rasa."})
 
-   
-    
-    
-    # Attendre 0.5 seconde avant de rafraîchir
+    # Attendre 0.5 seconde pour simuler un délai
     time.sleep(0.5)
-    st.experimental_rerun()
+
+# Inutile d'utiliser `st.experimental_rerun()`, cela devrait fonctionner correctement sur Streamlit Cloud.
