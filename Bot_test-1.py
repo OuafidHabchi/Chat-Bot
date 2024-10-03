@@ -1,11 +1,13 @@
 import streamlit as st
 import requests
+import time
 
 # Définir l'URL du serveur Rasa
 rasa_server_url = "http://3.87.73.156:5005/webhooks/rest/webhook"
 
 # Titre de la page
 st.title("Assistant Virtuel - Chatbot")
+
 # CSS pour styliser les bulles de dialogue
 st.markdown("""
     <style>
@@ -54,11 +56,15 @@ def send_message_to_rasa(user_message):
         return [{"text": "Je n'ai pas pu comprendre la réponse du serveur."}]
 
 # Afficher les messages échangés
-for message in st.session_state["messages"]:
-    if message["sender"] == "user":
-        st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+def display_messages():
+    for message in st.session_state["messages"]:
+        if message["sender"] == "user":
+            st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+
+# Appel de la fonction d'affichage des messages
+display_messages()
 
 # Utilisation de `st.form` pour la saisie des messages utilisateur
 with st.form(key="user_input_form", clear_on_submit=True):
@@ -70,18 +76,23 @@ if submit_button and user_message:
     # Ajouter le message utilisateur à l'historique
     st.session_state["messages"].append({"sender": "user", "message": user_message})
 
-    # Envoyer le message à Rasa et obtenir la réponse
-    responses = send_message_to_rasa(user_message)
+    # Afficher le message de l'utilisateur immédiatement
+    display_messages()
 
-    # Ajouter la réponse du bot à l'historique
-    if responses:  # Vérifier si des réponses ont été reçues
-        for response in responses:
-            if 'text' in response:
-                st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
-            else:
-                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
-    else:
-        st.session_state["messages"].append({"sender": "bot", "message": "Pas de réponse du serveur Rasa."})
+    # Indiquer que le chatbot est en train de répondre
+    with st.spinner("Le chatbot est en train de répondre..."):
+        # Envoyer le message à Rasa et obtenir la réponse
+        responses = send_message_to_rasa(user_message)
+
+        # Ajouter la réponse du bot à l'historique
+        if responses:  # Vérifier si des réponses ont été reçues
+            for response in responses:
+                if 'text' in response:
+                    st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
+                else:
+                    st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
+        else:
+            st.session_state["messages"].append({"sender": "bot", "message": "Pas de réponse du serveur Rasa."})
 
     # Rafraîchir l'affichage des messages après l'envoi
-    st.experimental_rerun()
+    display_messages()
