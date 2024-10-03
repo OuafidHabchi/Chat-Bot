@@ -11,7 +11,7 @@ st.title("Assistant Virtuel - Chatbot")
 st.markdown("""
     <style>
     .user-bubble {
-        background-color: #DCF8C6;
+        background-color: #ADD8E6; /* Bleu pour l'utilisateur */
         padding: 10px;
         border-radius: 10px;
         margin-bottom: 10px;
@@ -20,7 +20,7 @@ st.markdown("""
         clear: both;
     }
     .bot-bubble {
-        background-color: #F1F0F0;
+        background-color: #FF6347; /* Rouge pour le bot */
         padding: 10px;
         border-radius: 10px;
         margin-bottom: 10px;
