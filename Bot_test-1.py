@@ -65,9 +65,6 @@ if submit_button and user_message:
     # Ajouter le message utilisateur à l'historique et afficher immédiatement
     st.session_state["messages"].append({"sender": "user", "message": user_message})
 
-    # Afficher le message de l'utilisateur immédiatement
-    st.experimental_rerun()
-
     # Indiquer que le chatbot est en train de répondre
     with st.spinner("Le chatbot est en train de répondre..."):
         # Envoyer le message à Rasa et obtenir la réponse
@@ -78,5 +75,5 @@ if submit_button and user_message:
             for response in responses:
                 st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
 
-    # Rafraîchir l'affichage des messages après la réponse du serveur
-    st.experimental_rerun()
+    # Rafraîchir les messages sans utiliser st.experimental_rerun()
+    st.experimental_set_query_params()  # This is used to trigger a rerun without errors
