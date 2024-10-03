@@ -7,7 +7,7 @@ rasa_server_url = "http://3.87.73.156:5005/webhooks/rest/webhook"
 # Title of the page
 st.title("Assistant Virtuel - Chatbot")
 
-# CSS to style the chat bubbles
+# CSS to style the chat bubbles and position the input field correctly
 st.markdown("""
     <style>
     .user-bubble {
@@ -28,23 +28,36 @@ st.markdown("""
         float: left;
         clear: both;
     }
+    .input-box {
+        margin-top: 50px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize message history
+# Initialize message history if not present
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
+
+# Initialize a flag to track message processing
+if "is_message_processed" not in st.session_state:
+    st.session_state["is_message_processed"] = True
 
 # Function to send a message to Rasa and get a response
 def send_message_to_rasa(user_message):
     try:
         response = requests.post(rasa_server_url, json={"sender": "user", "message": user_message}, timeout=10)
         response.raise_for_status()  # Check if the HTTP request was successful
-        return response.json()  # Parse the response to JSON
-    except:
-        return [{"text": "Erreur: le serveur Rasa est injoignable pour l'instant."}]
+        return response.json()  # Try to parse the response to JSON
+    except requests.exceptions.Timeout:
+        return [{"text": "Le serveur a mis trop de temps à répondre. Réessayez plus tard."}]
+    except requests.exceptions.ConnectionError:
+        return [{"text": "Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré."}]
+    except requests.exceptions.RequestException as e:
+        return [{"text": f"Une erreur HTTP s'est produite : {e}"}]
+    except ValueError:
+        return [{"text": "La réponse du serveur n'était pas au format JSON."}]
 
-# Function to display messages
+# Function to display the exchanged messages
 def display_messages():
     for message in st.session_state["messages"]:
         if message["sender"] == "user":
@@ -52,26 +65,40 @@ def display_messages():
         else:
             st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
 
-# Show the message history
+# Call the function to display messages (always show the entire history)
 display_messages()
 
-# User input form
+# Adding space before the input box to ensure it's always at the bottom
+st.markdown("<div class='input-box'></div>", unsafe_allow_html=True)
+
+# Using `st.form` for user input at the bottom of the page
 with st.form(key="user_input_form", clear_on_submit=True):
-    user_message = st.text_input("Tapez votre message ici...")
+    user_message = st.text_input("Tapez votre message ici...", key="input_message")
     submit_button = st.form_submit_button("Envoyer")
 
-# Handle form submission
-if submit_button and user_message:
-    # Add the user's message to the message history
+# If the user submits a message
+if submit_button and user_message and st.session_state["is_message_processed"]:
+    # Mark the message as being processed
+    st.session_state["is_message_processed"] = False
+
+    # Add the user's message to the message history immediately
     st.session_state["messages"].append({"sender": "user", "message": user_message})
 
-    # Show the updated conversation immediately
-    display_messages()
+    # Show a spinner while the chatbot is processing the user's message
+    with st.spinner("Le chatbot est en train de réfléchir..."):
+        # Send the message to Rasa and get the response
+        responses = send_message_to_rasa(user_message)
 
-    # Get the bot's response and add it to the history
-    responses = send_message_to_rasa(user_message)
-    for response in responses:
-        st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
+        # After getting the response (or error), append the bot's response to the history
+        if responses:  # Check if any responses were received
+            for response in responses:
+                if 'text' in response:
+                    st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
+                else:
+                    st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
 
-    # Show the updated conversation with the bot's response
+    # Mark the message as processed so the user can send another one
+    st.session_state["is_message_processed"] = True
+
+    # Display the updated conversation (messages will always stay displayed)
     display_messages()
