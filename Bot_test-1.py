@@ -82,6 +82,9 @@ if submit_button and user_message:
     else:
         st.session_state["messages"].append({"sender": "bot", "message": "Pas de réponse du serveur Rasa."})
 
+   
+    
+    
     # Attendre 0.5 seconde avant de rafraîchir
     time.sleep(0.5)
     st.experimental_rerun()
