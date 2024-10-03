@@ -1,13 +1,13 @@
 import streamlit as st
 import requests
 
-# Définir l'URL du serveur Rasa
-rasa_server_url = "http://3.87.73.156:5005/webhooks/rest/webhook"
+# Define the URL of your Rasa server
+rasa_server_url = "http://<your-aws-instance-ip>:5005/webhooks/rest/webhook"
 
-# Titre de la page
+# Title of the page
 st.title("Assistant Virtuel - Chatbot")
 
-# CSS pour styliser les bulles de dialogue
+# CSS to style the chat bubbles
 st.markdown("""
     <style>
     .user-bubble {
@@ -31,24 +31,26 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialiser l'historique des messages
+# Initialize message history
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# Fonction pour envoyer un message à Rasa et obtenir une réponse
+# Function to send a message to Rasa and get a response
 def send_message_to_rasa(user_message):
     try:
-        response = requests.post(rasa_server_url, json={"sender": "user", "message": user_message})
-        response.raise_for_status()  # Vérifie si la réponse HTTP est une erreur
-        return response.json()  # Tente de parser la réponse en JSON
+        response = requests.post(rasa_server_url, json={"sender": "user", "message": user_message}, timeout=10)
+        response.raise_for_status()  # Check if the HTTP request was successful
+        return response.json()  # Try to parse the response to JSON
+    except requests.exceptions.Timeout:
+        return [{"text": "Le serveur a mis trop de temps à répondre. Réessayez plus tard."}]
     except requests.exceptions.ConnectionError:
         return [{"text": "Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré."}]
     except requests.exceptions.RequestException as e:
-        return [{"text": f"Une erreur HTTP s'est produite : {e}"}]
+        return [{"text": f"Une erreur s'est produite lors de la connexion : {e}"}]
     except ValueError:
         return [{"text": "La réponse du serveur n'était pas au format JSON."}]
 
-# Fonction pour afficher les messages échangés
+# Function to display the exchanged messages
 def display_messages():
     for message in st.session_state["messages"]:
         if message["sender"] == "user":
@@ -56,31 +58,31 @@ def display_messages():
         else:
             st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
 
-# Appel de la fonction d'affichage des messages
+# Call the function to display messages
 display_messages()
 
-# Utilisation de `st.form` pour la saisie des messages utilisateur
+# Using `st.form` for user input
 with st.form(key="user_input_form", clear_on_submit=True):
     user_message = st.text_input("Tapez votre message ici...")
     submit_button = st.form_submit_button("Envoyer")
 
-# Si l'utilisateur soumet un message
+# If the user submits a message
 if submit_button and user_message:
-    # Ajouter le message utilisateur à l'historique et l'afficher immédiatement
+    # Append the user's message to the history
     st.session_state["messages"].append({"sender": "user", "message": user_message})
 
-    # Rafraîchir immédiatement les messages pour afficher le message utilisateur avant d'attendre la réponse
+    # Display the user's message immediately
     display_messages()
 
-    # Attendre la réponse du chatbot et l'afficher
+    # Show a spinner while waiting for the bot's response
     with st.spinner("Le chatbot est en train de répondre..."):
-        # Envoyer le message à Rasa et obtenir la réponse
+        # Send the message to Rasa and get the response
         responses = send_message_to_rasa(user_message)
 
-        # Ajouter la réponse du bot à l'historique, ou une erreur si elle existe
+        # Append the bot's response or error message to the history
         if responses:
             for response in responses:
                 st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
 
-    # Afficher immédiatement la nouvelle discussion après réception de la réponse du bot
+    # Display the conversation after receiving the bot's response
     display_messages()
