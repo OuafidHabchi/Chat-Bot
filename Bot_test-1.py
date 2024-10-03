@@ -39,10 +39,8 @@ if "messages" not in st.session_state:
 # Fonction pour envoyer un message à Rasa et obtenir une réponse
 def send_message_to_rasa(user_message):
     try:
-        # st.write("Envoi du message à Rasa : ", user_message)  # Commenté pour ne plus afficher le JSON
         response = requests.post(rasa_server_url, json={"sender": "user", "message": user_message})
         response.raise_for_status()  # Vérifie si la réponse HTTP est une erreur
-
         return response.json()  # Tente de parser la réponse en JSON
     except requests.exceptions.ConnectionError:
         st.error("Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré.")
@@ -74,7 +72,7 @@ if submit_button and user_message:
     # Envoyer le message à Rasa et obtenir la réponse
     responses = send_message_to_rasa(user_message)
 
-    # Ajouter la réponse du bot à l'historique
+    # Ajouter la réponse du bot à l'historique après réception de la réponse
     if responses:  # Vérifier si des réponses ont été reçues
         for response in responses:
             if 'text' in response:
