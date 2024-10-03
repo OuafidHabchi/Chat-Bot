@@ -48,12 +48,16 @@ def send_message_to_rasa(user_message):
     except ValueError:
         return [{"text": "La réponse du serveur n'était pas au format JSON."}]
 
-# Afficher les messages échangés
-for message in st.session_state["messages"]:
-    if message["sender"] == "user":
-        st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+# Fonction pour afficher les messages échangés
+def display_messages():
+    for message in st.session_state["messages"]:
+        if message["sender"] == "user":
+            st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+
+# Appel de la fonction d'affichage des messages
+display_messages()
 
 # Utilisation de `st.form` pour la saisie des messages utilisateur
 with st.form(key="user_input_form", clear_on_submit=True):
@@ -62,10 +66,13 @@ with st.form(key="user_input_form", clear_on_submit=True):
 
 # Si l'utilisateur soumet un message
 if submit_button and user_message:
-    # Ajouter le message utilisateur à l'historique et afficher immédiatement
+    # Ajouter le message utilisateur à l'historique et l'afficher immédiatement
     st.session_state["messages"].append({"sender": "user", "message": user_message})
 
-    # Indiquer que le chatbot est en train de répondre
+    # Rafraîchir immédiatement les messages pour afficher le message utilisateur avant d'attendre la réponse
+    display_messages()
+
+    # Attendre la réponse du chatbot et l'afficher
     with st.spinner("Le chatbot est en train de répondre..."):
         # Envoyer le message à Rasa et obtenir la réponse
         responses = send_message_to_rasa(user_message)
@@ -75,5 +82,5 @@ if submit_button and user_message:
             for response in responses:
                 st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
 
-    # Rafraîchir les messages sans utiliser st.experimental_rerun()
-    st.experimental_set_query_params()  # This is used to trigger a rerun without errors
+    # Afficher immédiatement la nouvelle discussion après réception de la réponse du bot
+    display_messages()
