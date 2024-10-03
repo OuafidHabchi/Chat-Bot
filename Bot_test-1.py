@@ -68,8 +68,11 @@ with st.form(key="user_input_form", clear_on_submit=True):
 
 # If the user submits a message
 if submit_button and user_message:
-    # Add the user's message to the message history immediately
+    # Add the user's message to the message history immediately and display it
     st.session_state["messages"].append({"sender": "user", "message": user_message})
+
+    # Display the updated conversation right away
+    display_messages()
 
     # Show a spinner to simulate the chatbot "thinking"
     with st.spinner("Le chatbot est en train de réfléchir..."):
@@ -84,4 +87,5 @@ if submit_button and user_message:
                 else:
                     st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
 
-    # No need for `st.experimental_rerun()`, as Streamlit will automatically rerun and update the state
+    # Display the updated conversation after receiving the bot's response
+    display_messages()
