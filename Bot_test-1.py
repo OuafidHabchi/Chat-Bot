@@ -37,7 +37,6 @@ if "messages" not in st.session_state:
 
 # Function to send a message to Rasa and get a response
 def send_message_to_rasa(user_message):
-    # Use a try-except block to handle errors inside this function
     try:
         response = requests.post(rasa_server_url, json={"sender": "user", "message": user_message}, timeout=10)
         response.raise_for_status()  # Check if the HTTP request was successful
@@ -85,5 +84,4 @@ if submit_button and user_message:
                 else:
                     st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
 
-    # After the spinner completes, refresh the display of messages
-    st.experimental_rerun()
+    # No need for `st.experimental_rerun()`, as Streamlit will automatically rerun and update the state
