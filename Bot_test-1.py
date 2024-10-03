@@ -69,24 +69,21 @@ with st.form(key="user_input_form", clear_on_submit=True):
 
 # If the user submits a message
 if submit_button and user_message:
-    # Append the user's message to the history (this will only display once)
-    st.session_state["messages"].append({"sender": "user", "message": user_message})
-
-    # Display the user's message immediately
-    display_messages()
-
-    # Simulate a delay of 2 seconds while waiting for the bot's response
-    time.sleep(2)
+    # Simulate a delay of 3 seconds (holding both the user's message and the bot's response)
+    time.sleep(1)
 
     # Show a spinner while waiting for the bot's response
     with st.spinner("Le chatbot est en train de répondre..."):
         # Send the message to Rasa and get the response
         responses = send_message_to_rasa(user_message)
 
+        # Once we have the bot's response, append both the user's message and bot's response to the history together
+        st.session_state["messages"].append({"sender": "user", "message": user_message})
+
         # Append the bot's response or error message to the history
         if responses:
             for response in responses:
                 st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
 
-    # Display the conversation after receiving the bot's response
+    # Display both the user message and the bot's response together
     display_messages()
