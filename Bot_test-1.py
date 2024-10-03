@@ -70,13 +70,19 @@ with st.form(key="user_input_form", clear_on_submit=True):
 if submit_button and user_message:
     # Add the user's message to the message history immediately
     st.session_state["messages"].append({"sender": "user", "message": user_message})
+    
+    # Refresh UI to display the user's message before processing the bot's response
+    display_messages()
+    st.experimental_rerun()
 
-    # Show a spinner to simulate the chatbot "thinking"
+# Show a spinner to simulate the chatbot "thinking" (if messages were just added)
+if len(st.session_state["messages"]) > 0 and st.session_state["messages"][-1]["sender"] == "user":
     with st.spinner("Le chatbot est en train de réfléchir..."):
-        # Send the message to Rasa and get the response (inside the spinner)
+        # Send the message to Rasa and get the response
+        user_message = st.session_state["messages"][-1]["message"]
         responses = send_message_to_rasa(user_message)
 
-        # After getting the response (or error), append the bot's response to the history
+        # After getting the response, append the bot's response to the history
         if responses:  # Check if any responses were received
             for response in responses:
                 if 'text' in response:
@@ -84,4 +90,5 @@ if submit_button and user_message:
                 else:
                     st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
 
-    # No need for `st.experimental_rerun()`, as Streamlit will automatically rerun and update the state
+        # Trigger an immediate rerun to display bot's message
+        st.experimental_rerun()
