@@ -6,11 +6,6 @@ rasa_server_url = "http://3.87.73.156:5005/webhooks/rest/webhook"
 
 # Titre de la page
 st.title("Assistant Virtuel - Chatbot")
-url = st.button("Acheter")
-
-if url:
-    st.write("[Cliquez ici pour acheter](https://api.leadconnectorhq.com/widget/form/zyAX62UnVmsRsb6Og5s3)")
-
 # CSS pour styliser les bulles de dialogue
 st.markdown("""
     <style>
