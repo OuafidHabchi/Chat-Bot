@@ -70,19 +70,13 @@ with st.form(key="user_input_form", clear_on_submit=True):
 if submit_button and user_message:
     # Add the user's message to the message history immediately
     st.session_state["messages"].append({"sender": "user", "message": user_message})
-    
-    # Refresh UI to display the user's message before processing the bot's response
-    display_messages()
-    st.experimental_rerun()
 
-# Show a spinner to simulate the chatbot "thinking" (if messages were just added)
-if len(st.session_state["messages"]) > 0 and st.session_state["messages"][-1]["sender"] == "user":
+    # Show a spinner to simulate the chatbot "thinking"
     with st.spinner("Le chatbot est en train de réfléchir..."):
-        # Send the message to Rasa and get the response
-        user_message = st.session_state["messages"][-1]["message"]
+        # Send the message to Rasa and get the response (inside the spinner)
         responses = send_message_to_rasa(user_message)
 
-        # After getting the response, append the bot's response to the history
+        # After getting the response (or error), append the bot's response to the history
         if responses:  # Check if any responses were received
             for response in responses:
                 if 'text' in response:
@@ -90,5 +84,5 @@ if len(st.session_state["messages"]) > 0 and st.session_state["messages"][-1]["s
                 else:
                     st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
 
-        # Trigger an immediate rerun to display bot's message
-        st.experimental_rerun()
+    # Refresh the displayed messages after receiving bot's reply
+    display_messages()
