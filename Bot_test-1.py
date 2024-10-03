@@ -31,7 +31,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize message history
+# Initialize message history if not present
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
@@ -58,7 +58,7 @@ def display_messages():
         else:
             st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
 
-# Call the function to display messages
+# Call the function to display messages (always show entire history)
 display_messages()
 
 # Using `st.form` for user input
@@ -71,9 +71,9 @@ if submit_button and user_message:
     # Add the user's message to the message history immediately
     st.session_state["messages"].append({"sender": "user", "message": user_message})
 
-    # Show a spinner to simulate the chatbot "thinking"
+    # Show a spinner while the chatbot is processing the user's message
     with st.spinner("Le chatbot est en train de réfléchir..."):
-        # Send the message to Rasa and get the response (inside the spinner)
+        # Send the message to Rasa and get the response
         responses = send_message_to_rasa(user_message)
 
         # After getting the response (or error), append the bot's response to the history
@@ -84,5 +84,7 @@ if submit_button and user_message:
                 else:
                     st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
 
-    # Refresh the displayed messages after receiving bot's reply
+    # Display the updated conversation (messages will always stay displayed)
     display_messages()
+
+# Keep the entire chat visible by calling display_messages again outside of conditionals
