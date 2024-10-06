@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import time
 
 # Définir l'URL du serveur Rasa
 rasa_server_url = "http://54.87.201.152:5005/webhooks/rest/webhook"
@@ -11,7 +12,7 @@ st.title("Assistant Virtuel - Chatbot")
 st.markdown("""
     <style>
     .user-bubble {
-        background-color: #ADD8E6; /* Bleu pour l'utilisateur */
+        background-color: #DCF8C6;
         padding: 10px;
         border-radius: 10px;
         margin-bottom: 10px;
@@ -20,7 +21,7 @@ st.markdown("""
         clear: both;
     }
     .bot-bubble {
-        background-color: #FF6347; /* Rouge pour le bot */
+        background-color: #F1F0F0;
         padding: 10px;
         border-radius: 10px;
         margin-bottom: 10px;
@@ -67,9 +68,6 @@ with st.form(key="user_input_form", clear_on_submit=True):
 if submit_button and user_message:
     # Ajouter le message utilisateur à l'historique
     st.session_state["messages"].append({"sender": "user", "message": user_message})
-    
-    # Afficher immédiatement le message de l'utilisateur
-    st.markdown(f'<div class="user-bubble">{user_message}</div>', unsafe_allow_html=True)
 
     # Envoyer le message à Rasa et obtenir la réponse
     responses = send_message_to_rasa(user_message)
@@ -79,10 +77,15 @@ if submit_button and user_message:
         for response in responses:
             if 'text' in response:
                 st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
-                # Afficher immédiatement la réponse du bot
-                st.markdown(f'<div class="bot-bubble">{response["text"]}</div>', unsafe_allow_html=True)
             else:
                 st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
     else:
-        st.session_state["messages"].append({"sender": "bot", "message": "Pas de réponse du serveur Rasa."})
+        st.session_state["messages"].append({
+    "sender": "bot", 
+    "message": "I didn't understand your question. Could you please repeat it?\nJe n'ai pas compris votre question. Pouvez-vous la répéter SVP !"
+})
 
+
+    # Attendre 0.5 seconde avant de rafraîchir
+    time.sleep(0.5)
+    st.experimental_rerun()
