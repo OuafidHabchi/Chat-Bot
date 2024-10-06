@@ -7,7 +7,7 @@ rasa_server_url = "http://54.87.201.152:5005/webhooks/rest/webhook"
 # Titre de la page
 st.title("Assistant Virtuel - Chatbot")
 
-# CSS pour styliser les bulles de dialogue
+# CSS pour styliser les bulles de dialogue et rendre le conteneur défilable
 st.markdown("""
     <style>
     .user-bubble {
@@ -27,6 +27,14 @@ st.markdown("""
         max-width: 60%;
         float: left;
         clear: both;
+    }
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -51,6 +59,16 @@ def send_message_to_rasa(user_message):
         st.error("La réponse du serveur n'était pas au format JSON.")
         return [{"text": "Je n'ai pas pu comprendre la réponse du serveur."}]
 
+# Afficher les messages dans un conteneur défilable
+chat_container = st.empty()  # Utiliser un conteneur vide pour les messages
+
+with chat_container.container():  # Rafraîchir à chaque itération
+    for message in st.session_state["messages"]:
+        if message["sender"] == "user":
+            st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+        else:
+            st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+
 # Utilisation de `st.form` pour la saisie des messages utilisateur
 with st.form(key="user_input_form", clear_on_submit=True):
     user_message = st.text_input("Tapez votre message ici...")
@@ -74,9 +92,10 @@ if submit_button and user_message:
     else:
         st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question.pouvez-vous la répéter SVP !"})
 
-# Afficher les messages échangés
-for message in st.session_state["messages"]:
-    if message["sender"] == "user":
-        st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+    # Forcer le conteneur de chat à scroller jusqu'au bas après l'ajout des messages
+    with chat_container.container():
+        for message in st.session_state["messages"]:
+            if message["sender"] == "user":
+                st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
