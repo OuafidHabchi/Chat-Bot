@@ -37,17 +37,15 @@ if st.button("Envoyer"):
         response = send_message(user_input)
         
         if response:
-            # Debug: afficher la réponse brute de Rasa dans la console
-            st.write("Réponse brute de Rasa:", response)
-
             # Ajouter le message de l'utilisateur à la conversation
             st.session_state.conversation.append(("Vous", user_input))
             
             # Ajouter la réponse du bot à la conversation
             for bot_response in response:
                 st.session_state.conversation.append(("Bot", bot_response.get("text", "Pas de réponse trouvée.")))
-        else:
-            st.warning("Pas de réponse reçue du serveur Rasa.")
+        
+        # Réinitialiser la zone de texte après l'envoi du message
+        st.experimental_rerun()
 
 # Afficher l'historique de la conversation
 if st.session_state.conversation:
