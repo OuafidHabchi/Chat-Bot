@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 
 # Définir l'URL du serveur Rasa
-rasa_server_url = "http://3.87.73.156:5005/webhooks/rest/webhook"
+rasa_server_url = "http://54.87.201.152:5005/webhooks/rest/webhook"
 
 # Titre de la page
 st.title("Assistant Virtuel - Chatbot")
