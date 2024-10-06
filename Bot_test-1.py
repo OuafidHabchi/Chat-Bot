@@ -68,6 +68,9 @@ if submit_button and user_message:
     # Envoyer le message à Rasa et obtenir la réponse
     responses = send_message_to_rasa(user_message)
 
+    # Afficher la réponse brute pour déboguer
+    st.write(responses)  # Décommenter pour voir la réponse brute
+
     # Ajouter la réponse du bot à l'historique après réception de la réponse
     for response in responses:
         st.session_state["messages"].append({"sender": "bot", "message": response.get("text", "Je n'ai pas compris votre question.")})
