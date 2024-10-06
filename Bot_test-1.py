@@ -11,6 +11,10 @@ st.title("Chatbot Interface - Rasa Server")
 if 'conversation' not in st.session_state:
     st.session_state.conversation = []
 
+# Initialiser une variable pour gérer la zone de texte
+if 'user_input' not in st.session_state:
+    st.session_state.user_input = ""
+
 # Fonction pour envoyer un message à Rasa et obtenir la réponse
 def send_message(message):
     try:
@@ -27,8 +31,8 @@ def send_message(message):
         st.error(f"Erreur lors de l'envoi de la requête : {e}")
         return None
 
-# Zone d'entrée pour écrire le message
-user_input = st.text_input("Vous : ", "")
+# Zone d'entrée pour écrire le message, en utilisant st.session_state pour le gérer
+user_input = st.text_input("Vous : ", st.session_state.user_input)
 
 # Quand l'utilisateur soumet un message
 if st.button("Envoyer"):
@@ -44,8 +48,8 @@ if st.button("Envoyer"):
             for bot_response in response:
                 st.session_state.conversation.append(("Bot", bot_response.get("text", "Pas de réponse trouvée.")))
         
-        # Réinitialiser la zone de texte après l'envoi du message
-        st.experimental_rerun()
+        # Réinitialiser le champ d'entrée utilisateur après l'envoi
+        st.session_state.user_input = ""
 
 # Afficher l'historique de la conversation
 if st.session_state.conversation:
