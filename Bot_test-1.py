@@ -42,18 +42,14 @@ def send_message_to_rasa(user_message):
         response.raise_for_status()  # Vérifie si la réponse HTTP est une erreur
         return response.json()  # Tente de parser la réponse en JSON
     except requests.exceptions.ConnectionError:
-        return [{"text": "Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré."}]
+        st.error("Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré.")
+        return [{"text": "Le serveur Rasa est injoignable, veuillez réessayer plus tard."}]
     except requests.exceptions.RequestException as e:
-        return [{"text": f"Une erreur HTTP s'est produite : {e}"}]
+        st.error(f"Une erreur HTTP s'est produite : {e}")
+        return [{"text": "Une erreur s'est produite lors de la connexion au serveur Rasa."}]
     except ValueError:
-        return [{"text": "La réponse du serveur n'était pas au format JSON."}]
-
-# Afficher les messages échangés
-for message in st.session_state["messages"]:
-    if message["sender"] == "user":
-        st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
-    else:
-        st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+        st.error("La réponse du serveur n'était pas au format JSON.")
+        return [{"text": "Je n'ai pas pu comprendre la réponse du serveur."}]
 
 # Utilisation de `st.form` pour la saisie des messages utilisateur
 with st.form(key="user_input_form", clear_on_submit=True):
@@ -62,17 +58,25 @@ with st.form(key="user_input_form", clear_on_submit=True):
 
 # Si l'utilisateur soumet un message
 if submit_button and user_message:
-    # Ajouter le message utilisateur à l'historique
+    # Ajouter le message utilisateur à l'historique immédiatement
     st.session_state["messages"].append({"sender": "user", "message": user_message})
 
     # Envoyer le message à Rasa et obtenir la réponse
     responses = send_message_to_rasa(user_message)
 
-    # Afficher la réponse brute pour déboguer
-    st.write(responses)  # Décommenter pour voir la réponse brute
+    # Ajouter la réponse du bot à l'historique
+    if responses:  # Vérifier si des réponses ont été reçues
+        for response in responses:
+            if 'text' in response:
+                st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
+            else:
+                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
+    else:
+        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question.pouvez-vous la répéter SVP !"})
 
-    # Ajouter la réponse du bot à l'historique après réception de la réponse
-    for response in responses:
-        st.session_state["messages"].append({"sender": "bot", "message": response.get("text", "Je n'ai pas compris votre question.")})
-
-# L'application se rafraîchit automatiquement après chaque interaction avec le formulaire
+# Afficher les messages échangés
+for message in st.session_state["messages"]:
+    if message["sender"] == "user":
+        st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
