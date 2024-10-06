@@ -1,13 +1,14 @@
 import streamlit as st
 import requests
+import time
 
-# Rasa server URL
+# Définir l'URL du serveur Rasa
 rasa_server_url = "http://54.87.201.152:5005/webhooks/rest/webhook"
 
-# Title of the page
+# Titre de la page
 st.title("Assistant Virtuel - Chatbot")
 
-# CSS for styling the chat bubbles
+# CSS pour styliser les bulles de dialogue
 st.markdown("""
     <style>
     .user-bubble {
@@ -26,54 +27,59 @@ st.markdown("""
         margin-bottom: 10px;
         max-width: 60%;
         float: left;
-        clear: both.
+        clear: both;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Initialize the message history
+# Initialiser l'historique des messages
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-# Function to send a message to Rasa and get a response with timeout handling
-def send_message_to_rasa(user_message, timeout=5):
+# Fonction pour envoyer un message à Rasa et obtenir une réponse
+def send_message_to_rasa(user_message):
     try:
-        # Send the message to Rasa with a timeout
-        response = requests.post(rasa_server_url, json={"sender": "user", "message": user_message}, timeout=timeout)
-        response.raise_for_status()  # Check if the request was successful
-        return response.json()  # Parse the response as JSON
-    except requests.exceptions.Timeout:
-        return [{"text": "Le serveur a mis trop de temps à répondre, veuillez réessayer."}]
+        response = requests.post(rasa_server_url, json={"sender": "user", "message": user_message})
+        response.raise_for_status()  # Vérifie si la réponse HTTP est une erreur
+        return response.json()  # Tente de parser la réponse en JSON
     except requests.exceptions.ConnectionError:
-        return [{"text": "Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré."}]
+        st.error("Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré.")
+        return [{"text": "Le serveur Rasa est injoignable, veuillez réessayer plus tard."}]
     except requests.exceptions.RequestException as e:
-        return [{"text": f"Une erreur HTTP s'est produite : {e}"}]
+        st.error(f"Une erreur HTTP s'est produite : {e}")
+        return [{"text": "Une erreur s'est produite lors de la connexion au serveur Rasa."}]
     except ValueError:
-        return [{"text": "La réponse du serveur n'était pas au format JSON."}]
+        st.error("La réponse du serveur n'était pas au format JSON.")
+        return [{"text": "Je n'ai pas pu comprendre la réponse du serveur."}]
 
-# Display the message history
+# Afficher les messages échangés
 for message in st.session_state["messages"]:
     if message["sender"] == "user":
         st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
     else:
         st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
 
-# Using st.form for user message input
+# Utilisation de `st.form` pour la saisie des messages utilisateur
 with st.form(key="user_input_form", clear_on_submit=True):
     user_message = st.text_input("Tapez votre message ici...")
     submit_button = st.form_submit_button("Envoyer")
 
-# If the user submits a message
+# Si l'utilisateur soumet un message
 if submit_button and user_message:
-    # Add the user message to the history
+    # Ajouter le message utilisateur à l'historique
     st.session_state["messages"].append({"sender": "user", "message": user_message})
 
-    # Send the message to Rasa and get the response
+    # Envoyer le message à Rasa et obtenir la réponse
     responses = send_message_to_rasa(user_message)
 
-    # Add the bot response to the history
-    for response in responses:
-        if 'text' in response:
-            st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
-        else:
-            st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
+    # Ajouter la réponse du bot à l'historique après réception de la réponse
+    if responses:  # Vérifier si des réponses ont été reçues
+        for response in responses:
+            if 'text' in response:
+                st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
+            else:
+                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
+    else:
+        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question.pouvez-vous la repeter SVP !"})
+
+   
