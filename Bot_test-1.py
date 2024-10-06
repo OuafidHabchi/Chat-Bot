@@ -32,16 +32,18 @@ def send_message(message):
         return None
 
 # Afficher l'historique de la conversation en haut de la page
+st.markdown("### Historique de la conversation")
 if st.session_state.conversation:
-    st.markdown("### Historique de la conversation")
     for sender, message in st.session_state.conversation:
         if sender == "Vous":
             st.markdown(f"**{sender}:** {message}")
         else:
             st.markdown(f"*{sender}:* {message}")
+else:
+    st.write("Aucune conversation pour le moment.")
 
-# Zone d'entrée pour écrire le message, en utilisant st.session_state pour le gérer
-user_input = st.text_input("Vous : ", st.session_state.user_input)
+# Zone d'entrée pour écrire le message
+user_input = st.text_input("Vous : ", key="user_input")
 
 # Quand l'utilisateur soumet un message
 if st.button("Envoyer"):
@@ -57,5 +59,5 @@ if st.button("Envoyer"):
             for bot_response in response:
                 st.session_state.conversation.append(("Bot", bot_response.get("text", "Pas de réponse trouvée.")))
         
-        # Réinitialiser le champ d'entrée utilisateur après l'envoi
-        st.session_state.user_input = ""
+        # Réinitialiser la zone de texte en modifiant la valeur de 'user_input' dans le state
+        st.session_state.user_input = ""  # Réinitialiser le champ d'entrée
