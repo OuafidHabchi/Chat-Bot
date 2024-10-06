@@ -5,7 +5,7 @@ import requests
 rasa_server_url = "http://54.87.201.152:5005/webhooks/rest/webhook"
 
 # Titre de la page
-st.title("Assistant Virtuel - Chatbot")
+st.title("Dispatch Virtuel ")
 
 # CSS pour styliser les bulles de dialogue et rendre le conteneur défilable
 st.markdown("""
