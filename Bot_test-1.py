@@ -42,22 +42,22 @@ if st.session_state.conversation:
 else:
     st.write("Aucune conversation pour le moment.")
 
-# Zone d'entrée pour écrire le message
+# Zone d'entrée pour écrire le message, en utilisant st.session_state pour le gérer
 user_input = st.text_input("Vous : ", key="user_input")
 
 # Quand l'utilisateur soumet un message
 if st.button("Envoyer"):
-    if user_input:
+    if st.session_state.user_input:
         # Envoyer le message et obtenir la réponse
-        response = send_message(user_input)
+        response = send_message(st.session_state.user_input)
         
         if response:
             # Ajouter le message de l'utilisateur à la conversation
-            st.session_state.conversation.append(("Vous", user_input))
+            st.session_state.conversation.append(("Vous", st.session_state.user_input))
             
             # Ajouter la réponse du bot à la conversation
             for bot_response in response:
                 st.session_state.conversation.append(("Bot", bot_response.get("text", "Pas de réponse trouvée.")))
         
-        # Réinitialiser la zone de texte en modifiant la valeur de 'user_input' dans le state
-        st.session_state.user_input = ""  # Réinitialiser le champ d'entrée
+        # Réinitialiser la zone de texte en modifiant l'état de session
+        st.session_state.user_input = ""  # Réinitialiser le champ d'entrée après l'envoi
