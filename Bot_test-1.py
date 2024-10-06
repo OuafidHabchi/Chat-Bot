@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import time
 
 # Définir l'URL du serveur Rasa
 rasa_server_url = "http://54.87.201.152:5005/webhooks/rest/webhook"
@@ -43,14 +42,11 @@ def send_message_to_rasa(user_message):
         response.raise_for_status()  # Vérifie si la réponse HTTP est une erreur
         return response.json()  # Tente de parser la réponse en JSON
     except requests.exceptions.ConnectionError:
-        st.error("Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré.")
-        return [{"text": "Le serveur Rasa est injoignable, veuillez réessayer plus tard."}]
+        return [{"text": "Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré."}]
     except requests.exceptions.RequestException as e:
-        st.error(f"Une erreur HTTP s'est produite : {e}")
-        return [{"text": "Une erreur s'est produite lors de la connexion au serveur Rasa."}]
+        return [{"text": f"Une erreur HTTP s'est produite : {e}"}]
     except ValueError:
-        st.error("La réponse du serveur n'était pas au format JSON.")
-        return [{"text": "Je n'ai pas pu comprendre la réponse du serveur."}]
+        return [{"text": "La réponse du serveur n'était pas au format JSON."}]
 
 # Afficher les messages échangés
 for message in st.session_state["messages"]:
@@ -73,15 +69,7 @@ if submit_button and user_message:
     responses = send_message_to_rasa(user_message)
 
     # Ajouter la réponse du bot à l'historique après réception de la réponse
-    if responses:  # Vérifier si des réponses ont été reçues
-        for response in responses:
-            if 'text' in response:
-                st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
-            else:
-                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
-    else:
-        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question.pouvez-vous la repeter SVP !"})
+    for response in responses:
+        st.session_state["messages"].append({"sender": "bot", "message": response.get("text", "Je n'ai pas compris votre question.")})
 
-    # Attendre 0.5 seconde avant de rafraîchir
-    time.sleep(0.5)
-    st.experimental_rerun()
+# L'application se rafraîchit automatiquement après chaque interaction avec le formulaire
