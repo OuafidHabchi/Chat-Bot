@@ -43,17 +43,13 @@ def send_message_to_rasa(user_message, timeout=5):
         response.raise_for_status()  # Check if the request was successful
         return response.json()  # Parse the response as JSON
     except requests.exceptions.Timeout:
-        st.error("Le serveur a mis trop de temps à répondre. Veuillez réessayer.")
-        return [{"text": "Le serveur Rasa a mis trop de temps à répondre, veuillez réessayer."}]
+        return [{"text": "Le serveur a mis trop de temps à répondre, veuillez réessayer."}]
     except requests.exceptions.ConnectionError:
-        st.error("Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré.")
-        return [{"text": "Le serveur Rasa est injoignable, veuillez réessayer plus tard."}]
+        return [{"text": "Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré."}]
     except requests.exceptions.RequestException as e:
-        st.error(f"Une erreur HTTP s'est produite : {e}")
-        return [{"text": "Une erreur s'est produite lors de la connexion au serveur Rasa."}]
+        return [{"text": f"Une erreur HTTP s'est produite : {e}"}]
     except ValueError:
-        st.error("La réponse du serveur n'était pas au format JSON.")
-        return [{"text": "Je n'ai pas pu comprendre la réponse du serveur."}]
+        return [{"text": "La réponse du serveur n'était pas au format JSON."}]
 
 # Display the message history
 for message in st.session_state["messages"]:
