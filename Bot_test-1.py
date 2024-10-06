@@ -31,6 +31,15 @@ def send_message(message):
         st.error(f"Erreur lors de l'envoi de la requête : {e}")
         return None
 
+# Afficher l'historique de la conversation en haut de la page
+if st.session_state.conversation:
+    st.markdown("### Historique de la conversation")
+    for sender, message in st.session_state.conversation:
+        if sender == "Vous":
+            st.markdown(f"**{sender}:** {message}")
+        else:
+            st.markdown(f"*{sender}:* {message}")
+
 # Zone d'entrée pour écrire le message, en utilisant st.session_state pour le gérer
 user_input = st.text_input("Vous : ", st.session_state.user_input)
 
@@ -50,11 +59,3 @@ if st.button("Envoyer"):
         
         # Réinitialiser le champ d'entrée utilisateur après l'envoi
         st.session_state.user_input = ""
-
-# Afficher l'historique de la conversation
-if st.session_state.conversation:
-    for sender, message in st.session_state.conversation:
-        if sender == "Vous":
-            st.markdown(f"**{sender}:** {message}")
-        else:
-            st.markdown(f"*{sender}:* {message}")
