@@ -13,9 +13,19 @@ if 'conversation' not in st.session_state:
 
 # Fonction pour envoyer un message à Rasa et obtenir la réponse
 def send_message(message):
-    # Envoyer la requête POST au serveur Rasa
-    response = requests.post(rasa_server_url, json={"sender": "user", "message": message})
-    return response.json()
+    try:
+        # Envoyer la requête POST au serveur Rasa
+        response = requests.post(rasa_server_url, json={"sender": "user", "message": message})
+        
+        # Vérifier si la requête a réussi
+        if response.status_code == 200:
+            return response.json()  # Retourne le JSON avec la réponse
+        else:
+            st.error(f"Erreur : {response.status_code}. Impossible de contacter le serveur Rasa.")
+            return None
+    except Exception as e:
+        st.error(f"Erreur lors de l'envoi de la requête : {e}")
+        return None
 
 # Zone d'entrée pour écrire le message
 user_input = st.text_input("Vous : ", "")
@@ -26,12 +36,18 @@ if st.button("Envoyer"):
         # Envoyer le message et obtenir la réponse
         response = send_message(user_input)
         
-        # Ajouter le message de l'utilisateur à la conversation
-        st.session_state.conversation.append(("Vous", user_input))
-        
-        # Ajouter la réponse du bot à la conversation
-        for bot_response in response:
-            st.session_state.conversation.append(("Bot", bot_response.get("text", "")))
+        if response:
+            # Debug: afficher la réponse brute de Rasa dans la console
+            st.write("Réponse brute de Rasa:", response)
+
+            # Ajouter le message de l'utilisateur à la conversation
+            st.session_state.conversation.append(("Vous", user_input))
+            
+            # Ajouter la réponse du bot à la conversation
+            for bot_response in response:
+                st.session_state.conversation.append(("Bot", bot_response.get("text", "Pas de réponse trouvée.")))
+        else:
+            st.warning("Pas de réponse reçue du serveur Rasa.")
 
 # Afficher l'historique de la conversation
 if st.session_state.conversation:
