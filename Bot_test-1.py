@@ -1,63 +1,87 @@
 import streamlit as st
 import requests
+import time
 
-# URL de votre serveur Rasa
+# Définir l'URL du serveur Rasa
 rasa_server_url = "http://54.87.201.152:5005/webhooks/rest/webhook"
 
-# Titre de l'application
-st.title("Chatbot Interface - Rasa Server")
+# Titre de la page
+st.title("Assistant Virtuel - Chatbot")
 
-# Initialiser l'état de session pour conserver la conversation
-if 'conversation' not in st.session_state:
-    st.session_state.conversation = []
+# CSS pour styliser les bulles de dialogue
+st.markdown("""
+    <style>
+    .user-bubble {
+        background-color: #DCF8C6;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        max-width: 60%;
+        float: right;
+        clear: both;
+    }
+    .bot-bubble {
+        background-color: #F1F0F0;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        max-width: 60%;
+        float: left;
+        clear: both;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Initialiser une variable pour gérer la zone de texte
-if 'user_input' not in st.session_state:
-    st.session_state.user_input = ""
+# Initialiser l'historique des messages
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
 
-# Fonction pour envoyer un message à Rasa et obtenir la réponse
-def send_message(message):
+# Fonction pour envoyer un message à Rasa et obtenir une réponse
+def send_message_to_rasa(user_message):
     try:
-        # Envoyer la requête POST au serveur Rasa
-        response = requests.post(rasa_server_url, json={"sender": "user", "message": message})
-        
-        # Vérifier si la requête a réussi
-        if response.status_code == 200:
-            return response.json()  # Retourne le JSON avec la réponse
-        else:
-            st.error(f"Erreur : {response.status_code}. Impossible de contacter le serveur Rasa.")
-            return None
-    except Exception as e:
-        st.error(f"Erreur lors de l'envoi de la requête : {e}")
-        return None
+        response = requests.post(rasa_server_url, json={"sender": "user", "message": user_message})
+        response.raise_for_status()  # Vérifie si la réponse HTTP est une erreur
+        return response.json()  # Tente de parser la réponse en JSON
+    except requests.exceptions.ConnectionError:
+        st.error("Impossible de se connecter au serveur Rasa. Assurez-vous qu'il est bien démarré.")
+        return [{"text": "Le serveur Rasa est injoignable, veuillez réessayer plus tard."}]
+    except requests.exceptions.RequestException as e:
+        st.error(f"Une erreur HTTP s'est produite : {e}")
+        return [{"text": "Une erreur s'est produite lors de la connexion au serveur Rasa."}]
+    except ValueError:
+        st.error("La réponse du serveur n'était pas au format JSON.")
+        return [{"text": "Je n'ai pas pu comprendre la réponse du serveur."}]
 
-# Afficher l'historique de la conversation en haut de la page
-st.markdown("### Historique de la conversation")
-if st.session_state.conversation:
-    for sender, message in st.session_state.conversation:
-        if sender == "Vous":
-            st.markdown(f"**{sender}:** {message}")
-        else:
-            st.markdown(f"*{sender}:* {message}")
-else:
-    st.write("Aucune conversation pour le moment.")
+# Afficher les messages échangés
+for message in st.session_state["messages"]:
+    if message["sender"] == "user":
+        st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
 
-# Zone d'entrée pour écrire le message, en utilisant st.session_state pour le gérer
-user_input = st.text_input("Vous : ", key="user_input")
+# Utilisation de `st.form` pour la saisie des messages utilisateur
+with st.form(key="user_input_form", clear_on_submit=True):
+    user_message = st.text_input("Tapez votre message ici...")
+    submit_button = st.form_submit_button("Envoyer")
 
-# Quand l'utilisateur soumet un message
-if st.button("Envoyer"):
-    if st.session_state.user_input:
-        # Envoyer le message et obtenir la réponse
-        response = send_message(st.session_state.user_input)
-        
-        if response:
-            # Ajouter le message de l'utilisateur à la conversation
-            st.session_state.conversation.append(("Vous", st.session_state.user_input))
-            
-            # Ajouter la réponse du bot à la conversation
-            for bot_response in response:
-                st.session_state.conversation.append(("Bot", bot_response.get("text", "Pas de réponse trouvée.")))
-        
-        # Réinitialiser la zone de texte en modifiant l'état de session
-        st.session_state.user_input = ""  # Réinitialiser le champ d'entrée après l'envoi
+# Si l'utilisateur soumet un message
+if submit_button and user_message:
+    # Ajouter le message utilisateur à l'historique
+    st.session_state["messages"].append({"sender": "user", "message": user_message})
+
+    # Envoyer le message à Rasa et obtenir la réponse
+    responses = send_message_to_rasa(user_message)
+
+    # Ajouter la réponse du bot à l'historique après réception de la réponse
+    if responses:  # Vérifier si des réponses ont été reçues
+        for response in responses:
+            if 'text' in response:
+                st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
+            else:
+                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
+    else:
+        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question.pouvez-vous la repeter SVP !"})
+
+    # Attendre 0.5 seconde avant de rafraîchir
+    time.sleep(0.5)
+    st.experimental_rerun()
