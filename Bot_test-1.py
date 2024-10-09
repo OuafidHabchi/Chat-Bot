@@ -102,7 +102,7 @@ if submit_button and user_message:
        st.session_state["messages"].append({
     "sender": "bot",
     "message": "Je n'ai pas compris votre question. Pouvez-vous la répéter SVP ? / I did not understand your question. Could you please repeat it?"
-})
+
 
 
     # Forcer le conteneur de chat à scroller jusqu'au bas après l'ajout des messages
