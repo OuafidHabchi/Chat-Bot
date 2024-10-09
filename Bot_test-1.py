@@ -21,7 +21,7 @@ st.markdown("""
         clear: both;
     }
     .bot-bubble {
-        background-color: #0000FF;
+        background-color: #85C1E9;
         padding: 10px;
         border-radius: 10px;
         margin-bottom: 10px;
