@@ -97,11 +97,13 @@ if submit_button and user_message:
             if 'text' in response:
                 st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
             else:
-                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
+                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question./ I did not understand your question"})
     else:
        st.session_state["messages"].append({
     "sender": "bot",
     "message": "Je n'ai pas compris votre question. Pouvez-vous la répéter SVP ? / I did not understand your question. Could you please repeat it?"
+})
+
 
 
 
