@@ -104,9 +104,9 @@ if submit_button and user_message:
             if 'text' in response:
                 st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
             else:
-                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
+                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question./ / I did not understand your question. Can you please repeat it ?"})
     else:
-        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question. Pouvez-vous la répéter SVP ?"})
+        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question. Pouvez-vous la répéter SVP ? / I did not understand your question. Can you please repeat it ?"})
 
     # Forcer le conteneur de chat à scroller jusqu'au bas après l'ajout des messages
     with chat_container.container():
