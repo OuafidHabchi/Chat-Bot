@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import re  # Importer la bibliothèque pour utiliser les expressions régulières
 
 # Définir l'URL du serveur Rasa
 rasa_server_url = "http://138.197.172.64:5005/webhooks/rest/webhook"
@@ -11,7 +12,7 @@ st.title("Dispatch Virtuel ")
 st.markdown("""
     <style>
     .user-bubble {
-        background-color: #0000FF;
+        background-color: #A3E4D7;
         padding: 10px;
         border-radius: 10px;
         margin-bottom: 10px;
@@ -20,7 +21,7 @@ st.markdown("""
         clear: both;
     }
     .bot-bubble {
-        background-color: #FF0000;
+        background-color: #0000FF;
         padding: 10px;
         border-radius: 10px;
         margin-bottom: 10px;
@@ -59,6 +60,12 @@ def send_message_to_rasa(user_message):
         st.error("La réponse du serveur n'était pas au format JSON.")
         return [{"text": "Je n'ai pas pu comprendre la réponse du serveur."}]
 
+# Fonction pour convertir les liens Markdown en HTML cliquable
+def convert_markdown_links_to_html(text):
+    # Expression régulière pour détecter les liens markdown de type [texte](url)
+    markdown_link_pattern = r'\[([^\]]+)\]\(([^)]+)\)'
+    return re.sub(markdown_link_pattern, r'<a href="\2" target="_blank">\1</a>', text)
+
 # Afficher les messages dans un conteneur défilable
 chat_container = st.empty()  # Utiliser un conteneur vide pour les messages
 
@@ -67,7 +74,9 @@ with chat_container.container():  # Rafraîchir à chaque itération
         if message["sender"] == "user":
             st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
         else:
-            st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+            # Convertir les liens markdown en liens HTML cliquables
+            bot_message_html = convert_markdown_links_to_html(message["message"])
+            st.markdown(f'<div class="bot-bubble">{bot_message_html}</div>', unsafe_allow_html=True)
 
 # Utilisation de `st.form` pour la saisie des messages utilisateur
 with st.form(key="user_input_form", clear_on_submit=True):
@@ -90,7 +99,7 @@ if submit_button and user_message:
             else:
                 st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
     else:
-        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question.pouvez-vous la répéter SVP !"})
+        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question. Pouvez-vous la répéter SVP ?"})
 
     # Forcer le conteneur de chat à scroller jusqu'au bas après l'ajout des messages
     with chat_container.container():
@@ -98,4 +107,6 @@ if submit_button and user_message:
             if message["sender"] == "user":
                 st.markdown(f'<div class="user-bubble">{message["message"]}</div>', unsafe_allow_html=True)
             else:
-                st.markdown(f'<div class="bot-bubble">{message["message"]}</div>', unsafe_allow_html=True)
+                # Convertir les liens markdown en liens HTML cliquables
+                bot_message_html = convert_markdown_links_to_html(message["message"])
+                st.markdown(f'<div class="bot-bubble">{bot_message_html}</div>', unsafe_allow_html=True)
