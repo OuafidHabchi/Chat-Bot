@@ -8,6 +8,13 @@ rasa_server_url = "http://138.197.172.64:5005/webhooks/rest/webhook"
 # Titre de la page
 st.title("Dispatch Virtuel ")
 
+# Ajouter des liens vers les guides d'utilisation
+st.markdown("""
+### Guides d'utilisation
+- [Guide d'utilisation en français](https://docs.google.com/document/d/1yaAk-Dn2gI6iAOqE6OtGBl351h0WAdDxhJq-TDY-rJ8/edit?usp=sharing)
+- [User guide in English](https://docs.google.com/document/d/1Q-yKwCRPaHcGwcI0tj-jv6UOK7Ut53eQi0-0EBjg284/edit?usp=sharing)
+""")
+
 # CSS pour styliser les bulles de dialogue et rendre le conteneur défilable
 st.markdown("""
     <style>
@@ -97,15 +104,9 @@ if submit_button and user_message:
             if 'text' in response:
                 st.session_state["messages"].append({"sender": "bot", "message": response["text"]})
             else:
-                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question./ I did not understand your question"})
+                st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question."})
     else:
-       st.session_state["messages"].append({
-    "sender": "bot",
-    "message": "Je n'ai pas compris votre question. Pouvez-vous la répéter SVP ? / I did not understand your question. Could you please repeat it?"
-})
-
-
-
+        st.session_state["messages"].append({"sender": "bot", "message": "Je n'ai pas compris votre question. Pouvez-vous la répéter SVP ?"})
 
     # Forcer le conteneur de chat à scroller jusqu'au bas après l'ajout des messages
     with chat_container.container():
